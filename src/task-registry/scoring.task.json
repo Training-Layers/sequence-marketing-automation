@@ -1,0 +1,85 @@
+{
+  "id": "scoring",
+  "name": "Scoring Task",
+  "description": "Calculates and updates scores for persons and organizations based on their data and activities",
+  "version": "1.0.0",
+  "owner": "data-team",
+  "schedule": {
+    "type": "event",
+    "trigger": "on.demand"
+  },
+  "input": {
+    "type": "object",
+    "required": ["sourceRecordId", "trampData"],
+    "properties": {
+      "sourceRecordId": {
+        "type": "string",
+        "description": "ID of the source record to process"
+      },
+      "personId": {
+        "type": "string",
+        "description": "Optional ID of the person to score"
+      },
+      "organizationId": {
+        "type": "string",
+        "description": "Optional ID of the organization to score"
+      },
+      "config": {
+        "type": "object",
+        "properties": {
+          "forceRescore": {
+            "type": "boolean",
+            "default": false,
+            "description": "Force recalculation of scores even if recently updated"
+          }
+        }
+      },
+      "trampData": {
+        "type": "object",
+        "description": "Tramp data for task tracking"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "success": {
+        "type": "boolean",
+        "description": "Whether the scoring was successful"
+      },
+      "data": {
+        "type": "object",
+        "properties": {
+          "personScored": {
+            "type": "boolean",
+            "description": "Whether a person was scored"
+          },
+          "personScore": {
+            "type": "number",
+            "description": "Updated score for the person"
+          },
+          "organizationScored": {
+            "type": "boolean",
+            "description": "Whether an organization was scored"
+          },
+          "organizationScore": {
+            "type": "number",
+            "description": "Updated score for the organization"
+          },
+          "scoringData": {
+            "type": "object",
+            "description": "Additional data used in score calculation"
+          }
+        }
+      },
+      "error": {
+        "type": "string",
+        "description": "Error message if scoring failed"
+      },
+      "trampData": {
+        "type": "object",
+        "description": "Tramp data passed through"
+      }
+    }
+  }
+} 

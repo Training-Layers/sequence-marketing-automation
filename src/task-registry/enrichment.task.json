@@ -1,0 +1,78 @@
+{
+  "id": "enrichment",
+  "name": "Enrichment Task",
+  "description": "Enriches both person and organization records with third-party data",
+  "version": "1.0.0",
+  "owner": "data-team",
+  "schedule": {
+    "type": "event",
+    "trigger": "on.demand"
+  },
+  "input": {
+    "type": "object",
+    "required": ["sourceRecordId", "trampData"],
+    "properties": {
+      "sourceRecordId": {
+        "type": "string",
+        "description": "ID of the source record to enrich"
+      },
+      "personId": {
+        "type": "string",
+        "description": "Optional ID of the person to enrich"
+      },
+      "organizationId": {
+        "type": "string",
+        "description": "Optional ID of the organization to enrich"
+      },
+      "config": {
+        "type": "object",
+        "properties": {
+          "forceReenrichOrganisation": {
+            "type": "boolean",
+            "default": false,
+            "description": "Force re-enrichment of organization even if already enriched"
+          },
+          "forceReenrichPerson": {
+            "type": "boolean",
+            "default": false,
+            "description": "Force re-enrichment of person even if already enriched"
+          }
+        }
+      },
+      "trampData": {
+        "type": "object",
+        "description": "Tramp data for task tracking"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "success": {
+        "type": "boolean",
+        "description": "Whether the enrichment was successful"
+      },
+      "data": {
+        "type": "object",
+        "properties": {
+          "personEnriched": {
+            "type": "boolean",
+            "description": "Whether a person was enriched"
+          },
+          "organizationEnriched": {
+            "type": "boolean",
+            "description": "Whether an organization was enriched"
+          }
+        }
+      },
+      "error": {
+        "type": "string",
+        "description": "Error message if enrichment failed"
+      },
+      "trampData": {
+        "type": "object",
+        "description": "Tramp data passed through"
+      }
+    }
+  }
+} 

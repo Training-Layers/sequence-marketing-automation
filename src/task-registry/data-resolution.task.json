@@ -1,0 +1,44 @@
+{
+  "name": "Data Resolution",
+  "file": "src/trigger/tasks/data-resolution.ts",
+  "description": "Resolves and processes data from a source record, updating its status and resolved data",
+  "enableSupabaseLogging": true,
+  "input": {
+    "required": {
+      "sourceRecordId": {
+        "type": "string",
+        "description": "ID of the source record to process"
+      }
+    },
+    "optional": {
+      "trampData": {
+        "type": "object",
+        "description": "Optional arbitrary data passed through the task"
+      }
+    }
+  },
+  "output": {
+    "success": {
+      "type": "boolean",
+      "description": "Whether the resolution succeeded"
+    },
+    "data": {
+      "type": "object",
+      "description": "Result data on success",
+      "properties": {
+        "sourceRecordId": {
+          "type": "string",
+          "description": "ID of the processed source record"
+        },
+        "sourceType": {
+          "type": "string",
+          "description": "Type of the source record"
+        },
+        "trampData": {
+          "type": "object",
+          "description": "Passed through trampData if provided"
+        }
+      }
+    }
+  }
+} 

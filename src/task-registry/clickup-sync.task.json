@@ -1,0 +1,97 @@
+{
+    "id": "clickup-sync-scheduled",
+    "name": "Scheduled ClickUp Sync Task",
+    "description": "Automatically synchronizes tasks from ClickUp to the local database on a daily schedule",
+    "version": "1.0.0",
+    "owner": "data-team",
+    "schedule": {
+      "type": "cron",
+      "pattern": "0 1 * * *",
+      "timezone": "UTC"
+    },
+    "input": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Current execution timestamp"
+        },
+        "lastTimestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Previous execution timestamp"
+        },
+        "timezone": {
+          "type": "string",
+          "description": "Timezone for the schedule"
+        },
+        "scheduleId": {
+          "type": "string",
+          "description": "ID of the schedule"
+        },
+        "upcoming": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": "Next 5 scheduled execution times"
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the sync was successful"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "tasksProcessed": {
+              "type": "number",
+              "description": "Number of tasks processed in this sync"
+            },
+            "lastSyncedAt": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Timestamp of when the sync completed"
+            },
+            "timezone": {
+              "type": "string",
+              "description": "Timezone used for the sync"
+            },
+            "scheduleId": {
+              "type": "string",
+              "description": "ID of the schedule that triggered this sync"
+            },
+            "nextRuns": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "description": "Next scheduled sync times"
+            }
+          }
+        },
+        "error": {
+          "type": "string",
+          "description": "Error message if sync failed"
+        }
+      }
+    },
+    "task": {
+      "maxDuration": 300,
+      "retry": {
+        "maxAttempts": 3,
+        "minTimeoutInMs": 1000,
+        "maxTimeoutInMs": 10000
+      },
+      "queue": {
+        "concurrencyLimit": 1
+      }
+    }
+  }

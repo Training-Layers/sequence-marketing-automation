@@ -1,0 +1,72 @@
+{
+  "name": "Source Data Ingestion",
+  "file": "src/trigger/tasks/source-data-ingestion.ts",
+  "description": "Ingests data from various sources and stores it in the database with initial processing status",
+  "input": {
+    "required": {
+      "source": {
+        "type": "object",
+        "description": "Source metadata information",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "lead_form",
+              "ad_platform",
+              "google_analytics",
+              "mixpanel",
+              "postgres_import",
+              "app_signup",
+              "manual_entry",
+              "enrichment",
+              "api"
+            ],
+            "description": "Type of data source"
+          }
+        }
+      },
+      "data": {
+        "type": "unknown",
+        "description": "Raw data from the source in any structure"
+      }
+    },
+    "optional": {
+      "source.provider": {
+        "type": "string",
+        "description": "Provider or platform name"
+      },
+      "source.batchId": {
+        "type": "string",
+        "description": "Batch identifier for grouped records"
+      },
+      "source.externalId": {
+        "type": "string",
+        "description": "External identifier from the source system"
+      },
+      "trampData": {
+        "type": "object",
+        "description": "Optional arbitrary data passed through the task"
+      }
+    }
+  },
+  "output": {
+    "success": {
+      "type": "boolean",
+      "description": "Whether the ingestion succeeded"
+    },
+    "data": {
+      "type": "object",
+      "description": "Result data on success",
+      "properties": {
+        "sourceRecordId": {
+          "type": "string",
+          "description": "ID of the created source record"
+        },
+        "trampData": {
+          "type": "object",
+          "description": "Passed through trampData if provided"
+        }
+      }
+    }
+  }
+} 

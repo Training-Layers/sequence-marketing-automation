@@ -1,0 +1,60 @@
+{
+  "id": "organization_enrichment",
+  "name": "Organization Enrichment Task",
+  "description": "Enriches organization records with third-party data from Clay",
+  "version": "1.0.0",
+  "owner": "data-team",
+  "schedule": {
+    "type": "event",
+    "trigger": "on.demand"
+  },
+  "input": {
+    "type": "object",
+    "required": ["organizationId", "trampData"],
+    "properties": {
+      "organizationId": {
+        "type": "string",
+        "description": "ID of the organization to enrich"
+      },
+      "forceReenrich": {
+        "type": "boolean",
+        "default": false,
+        "description": "Force re-enrichment even if already enriched"
+      },
+      "trampData": {
+        "type": "object",
+        "description": "Tramp data for task tracking"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "success": {
+        "type": "boolean",
+        "description": "Whether the enrichment was successful"
+      },
+      "data": {
+        "type": "object",
+        "properties": {
+          "enriched": {
+            "type": "boolean",
+            "description": "Whether the organization was enriched"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason if not enriched (e.g., already_enriched)"
+          },
+          "organization": {
+            "type": "object",
+            "description": "Updated organization record after enrichment"
+          }
+        }
+      },
+      "error": {
+        "type": "string",
+        "description": "Error message if enrichment failed"
+      }
+    }
+  }
+} 

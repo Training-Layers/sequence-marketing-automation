@@ -1,0 +1,60 @@
+{
+  "id": "person_enrichment",
+  "name": "Person Enrichment Task",
+  "description": "Enriches person records with third-party data from Clay",
+  "version": "1.0.0",
+  "owner": "data-team",
+  "schedule": {
+    "type": "event",
+    "trigger": "on.demand"
+  },
+  "input": {
+    "type": "object",
+    "required": ["personId", "trampData"],
+    "properties": {
+      "personId": {
+        "type": "string",
+        "description": "ID of the person to enrich"
+      },
+      "forceReenrich": {
+        "type": "boolean",
+        "default": false,
+        "description": "Force re-enrichment even if already enriched"
+      },
+      "trampData": {
+        "type": "object",
+        "description": "Tramp data for task tracking"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "success": {
+        "type": "boolean",
+        "description": "Whether the enrichment was successful"
+      },
+      "data": {
+        "type": "object",
+        "properties": {
+          "enriched": {
+            "type": "boolean",
+            "description": "Whether the person was enriched"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason if not enriched (e.g., already_enriched)"
+          },
+          "person": {
+            "type": "object",
+            "description": "Updated person record after enrichment"
+          }
+        }
+      },
+      "error": {
+        "type": "string",
+        "description": "Error message if enrichment failed"
+      }
+    }
+  }
+} 

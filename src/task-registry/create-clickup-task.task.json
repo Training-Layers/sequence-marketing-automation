@@ -1,0 +1,137 @@
+{
+  "name": "Create ClickUp Task",
+  "taskFile": "src/trigger/tasks/create-clickup-task.ts",
+  "description": "Creates a new task in ClickUp with person or organization context",
+  "input": {
+    "required": {
+      "name": {
+        "type": "string",
+        "description": "Title of the task"
+      },
+      "type": {
+        "type": "enum",
+        "values": ["person_followup", "org_review"],
+        "description": "Type of task to create"
+      },
+      "source": {
+        "type": "enum",
+        "values": ["lead", "enrichment", "scoring", "manual"],
+        "description": "Source that triggered task creation"
+      },
+      "entityType": {
+        "type": "enum",
+        "values": ["person", "organization"],
+        "description": "Type of entity this task is associated with"
+      },
+      "entityId": {
+        "type": "string",
+        "description": "ID of the associated entity"
+      }
+    },
+    "optional": {
+      "trampData": {
+        "type": "record",
+        "description": "Arbitrary data to pass through unchanged",
+        "items": "any"
+      },
+      "taskDetails": {
+        "type": "object",
+        "description": "Additional task details",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the task"
+          },
+          "priority": {
+            "type": "number",
+            "description": "Task priority level"
+          },
+          "dueDate": {
+            "type": "string",
+            "description": "Due date for the task (ISO format)"
+          }
+        }
+      },
+      "relationships": {
+        "type": "object",
+        "description": "Related entity IDs",
+        "properties": {
+          "organizationId": {
+            "type": "string",
+            "description": "ID of the related organization"
+          },
+          "personId": {
+            "type": "string",
+            "description": "ID of the related person"
+          },
+          "sourceRecordId": {
+            "type": "string",
+            "description": "ID of the source record that triggered task creation"
+          }
+        }
+      },
+      "taskMetadata": {
+        "type": "object",
+        "description": "Task metadata and assignments",
+        "properties": {
+          "assignees": {
+            "type": "array",
+            "items": "string",
+            "description": "List of ClickUp user IDs to assign the task to"
+          },
+          "tags": {
+            "type": "array",
+            "items": "string",
+            "description": "List of tags to apply to the task"
+          },
+          "customFields": {
+            "type": "record",
+            "description": "Custom fields to set on the task",
+            "items": "any"
+          }
+        }
+      }
+    }
+  },
+  "output": {
+    "success": {
+      "type": "boolean",
+      "description": "Whether the task creation was successful"
+    },
+    "data": {
+      "type": "object",
+      "description": "Task creation result data",
+      "optional": true,
+      "properties": {
+        "taskId": {
+          "type": "string",
+          "description": "Internal task ID"
+        },
+        "clickupId": {
+          "type": "string",
+          "description": "ClickUp task ID"
+        },
+        "entityType": {
+          "type": "enum",
+          "values": ["person", "organization"],
+          "description": "Type of entity associated with the task"
+        },
+        "entityId": {
+          "type": "string",
+          "description": "ID of the associated entity"
+        }
+      }
+    },
+    "error": {
+      "type": "string",
+      "description": "Error message if task creation failed",
+      "optional": true
+    },
+    "trampData": {
+      "type": "record",
+      "description": "The same arbitrary data that was passed in",
+      "items": "any",
+      "optional": true
+    }
+  }
+} 

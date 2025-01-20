@@ -1,0 +1,183 @@
+# Cursor Rules for TypeScript Projects
+
+## Core Principles
+
+1. **Prioritize Clarity and Correctness**  
+   - Write TypeScript code that is easy to understand, maintain, and demonstrably correct.
+   - Type safety and accuracy are paramount; avoid anything that reduces type clarity.
+
+2. **Embrace the Type System**  
+   - Utilize TypeScript's type system to its fullest potential.
+   - Think of types as sets of possible values and use them to model data and logic accurately.
+
+3. **Think at the Type Level**  
+   - Leverage generics, conditional types, mapped types, and utility types to perform type-level computations.
+   - Treat types as first-class data in your design.
+
+4. **Be Explicit**  
+   - While type inference is powerful, favor explicit type annotations (`: Type`) over type assertions (`as Type`), especially for function signatures and complex object literals.
+   - This enhances readability, maintainability, and conveys precise intent.
+
+5. **Minimize `any` and `unknown`**  
+   - Avoid `any` whenever possible— it disables type checking and should be a last resort.
+   - Prefer `unknown` for truly unknown types, then narrow it with guards or assertions.
+   - Keep `any` scoped to the smallest possible region if unavoidable.
+
+6. **Favor Narrow Scopes**  
+   - Keep the scope of `any` and other broad types as limited as possible.
+   - This limits the potential ripple effect on type safety.
+
+7. **Document with TSDoc**  
+   - Use TSDoc for all exported functions, classes, and types.
+   - Provide clear explanations of parameters, return types, and usage context.
+
+8. **Model Data Accurately**  
+   - Design types so that invalid states become unrepresentable wherever possible.
+
+9. **Prefer Immutability**  
+   - Use `readonly` to prevent unintended mutations.
+   - Favor immutable data structures and functional patterns when it makes sense.
+
+10. **Continuously Refactor**  
+    - Regularly review and refactor code to improve type safety, clarity, and maintainability.
+
+11. **Test Your Types**  
+    - Write tests to verify the correctness of your type definitions.
+    - Use tools like `tsd` or custom type-level tests with `expect-type`.
+
+12. **Learn from Libraries and Challenges**  
+    - Study libraries like `ts-pattern` or “Type Challenges” to understand advanced patterns.
+    - Incorporate relevant patterns from “Effective TypeScript”.
+
+## Specific Rules and Guidelines
+
+### 1. Compiler Configuration
+
+- **Enable Strict Mode**: Set `strict` to `true` in `tsconfig.json`.
+- **Use Additional Checks**:
+  - `noImplicitAny`
+  - `strictNullChecks`
+  - `noUnusedLocals`
+  - `noUnusedParameters`
+  - `noImplicitThis`
+- **Module Resolution**: Prefer ES Modules with `"module": "ESNext"` or `"NodeNext"` (depending on environment).
+- **Target**: Choose a target consistent with your runtime (e.g., `"target": "ES2020"`).
+
+### 2. When to Use Provided Resources
+
+#### `ts-pattern.txt`
+- **Use Case**: Complex conditional logic, especially with unions/intersections.
+- **Why**: Ensures exhaustive pattern matching for safer, more readable code.
+- **Examples**: `match`, `P` utilities (`P.string`, `P.when`, `P.optional`, etc.).  
+
+#### `type-challenge.txt`
+- **Use Case**: Deepen type system mastery, advanced type manipulations.
+- **Why**: Real-world practice with generics, conditional types, and inference.
+
+#### `effective typescript 83.txt`
+- **Use Case**: Guidance on best practices and design patterns.
+- **Why**: Provides the "why" behind many TypeScript features, helping avoid pitfalls.
+
+### 3. General Coding Style
+
+1. **Naming Conventions**:
+   - Files: `kebab-case.ts` (or `.tsx` for React components).
+   - Classes: `PascalCase`.
+   - Functions/Variables: `lowerCamelCase` (recommended over `lowercase_with_underscores` for JavaScript/TypeScript).
+   - Constants: `UPPER_CASE_SNAKE`.
+   - Private Fields: `_leadingUnderscore`.
+   - Avoid excessive “name mangling” (like `__double_leading_underscore`), unless truly needed.
+
+2. **Exports**:
+   - **Prefer Named Exports**: It’s clearer and encourages consistent import structures.
+   - Use Default Export only when there is a single main export (like a primary class).
+
+3. **Formatting**:
+   - Use a linter (e.g., `eslint` with `@typescript-eslint`) to enforce consistent code style.
+   - Use a formatter (e.g., Prettier) for automatic formatting.
+   - Maintain consistent indentation (2 or 4 spaces, or tabs—team decides).
+
+### 4. Advanced Type-Level Programming
+
+- **Generics**: Reuse type-safe components; only use generic type parameters that relate multiple types.
+- **Conditional Types**: `T extends U ? X : Y` for advanced logic; watch out for distribution over unions.
+- **Mapped Types**: Transform object types with `keyof` and `[K in keyof T]`.
+- **Template Literal Types**: Model specialized string patterns, combine with inference.
+- **Inference with `infer`**: Extract type info from function signatures, arrays, etc.
+- **Recursive Types**: Use tail recursion to avoid hitting TS recursion limits.
+- **Utility Types**: Leverage built-in `Partial`, `Pick`, `Omit`, `Exclude`, etc.
+- **`never`** and Exhaustiveness**: Use `never` for unreachable paths; consider a helper like `assertUnreachable()`.
+
+### 5. Error Handling
+
+- **Fail Fast**: Throw early on invalid states or inputs.
+- **Typed Errors**: Prefer custom error classes that extend `Error`, containing typed fields for structured error data.
+- **Explicit Handling**: Use `try/catch` for predictable error scenarios, or monadic/Result types if your domain requires it.
+- **Informative Messages**: Make error messages actionable and specific.
+- **Cleanup**: Use `finally` or similar patterns to release resources consistently.
+
+### 6. Testing
+
+- **Write Unit Tests**: Keep tests small and focused; aim for 80%+ coverage on critical paths.
+- **Framework**: Use `jest` or `vitest` for TS-friendly testing; combine with `ts-jest` or similar.
+- **Mock External Dependencies**: Isolate tests from external I/O or side effects.
+- **Type-Level Testing**: Use `tsd` or `expect-type` to ensure advanced types behave as expected.
+- **Continuous Integration**: Automate tests in CI/CD pipelines.
+
+### 7. Documentation
+
+- **Docstrings**: Use TSDoc or JSDoc to describe modules, classes, functions, and types.
+- **Autogenerated Docs**: Generate with tools like TypeDoc.
+- **Keep Up to Date**: Documentation is part of the code—avoid letting it become stale.
+
+### 8. Cursor IDE Specific
+
+- **Leverage Cursor’s AI**: For completion, generation, and refactoring, but always review AI-suggested code.
+- **Extensions**: Use relevant Cursor or VS Code extensions for TypeScript (linting, IntelliSense).
+- **Debugging**: Set breakpoints, inspect variables, and use integrated debug consoles.
+- **AI Prompts**: Provide context in prompts to help Cursor generate accurate, typed code.
+
+### 9. Project Structure
+
+- **Modules and Packages**: Organize code by domain or feature area.
+- **tsconfig.json**: Use separate configs for dev, test, and production if needed.
+- **README.md**: Describe project purpose, installation, usage, and any unique constraints.
+- **Pre-Commit Hooks**: Use `lint-staged` and `husky` to enforce lint, format, and test checks before committing.
+
+### 10. Performance
+
+- **Profile Before Optimizing**: Identify real bottlenecks.
+- **Use Efficient Structures**: Choose appropriate data structures for your domain.
+- **Caching and Memoization**: Use carefully to improve performance where it matters.
+- **Type-Level Performance**: Avoid extremely deep or overly complex types that strain the compiler.
+
+### 11. Migration from JavaScript
+
+- **Incremental Conversion**: Use `allowJs` to mix JS and TS.
+- **Module-by-Module**: Convert bottom of dependency graph first.
+- **Enable `noImplicitAny` Early**: Increase type safety step by step.
+- **JSDoc**: Use `@ts-check` in JS files to start type-checking gradually.
+
+### 12. Effective TypeScript Guidance
+
+- **Structural vs Nominal**: TS is structurally typed—design accordingly.
+- **Prefer Type Aliases for Complex Types**: They’re more versatile than interfaces for advanced type transformations.
+- **Avoid Excessive `as`**: Only assert when you have more info than TS can infer.
+- **Use `as const`**: For read-only literal types or narrowing.
+- **Use Source Maps**: For debugging clarity.
+- **Consider Code Generation**: For repeated or large types, but weigh complexity.
+- **Prefer `unknown` to `any`**: When parameter type is indefinite.
+- **Write Type-Level Tests**: Where logic is complex or domain-specific.
+
+### 13. `ts-pattern` Specific
+
+- **Pattern Matching**: Use `match` and `P` to handle unions, arrays, tuples, etc.
+- **Predicates**: `P.when`, `P.string`, `P.number`, etc., for more advanced matches.
+- **Exhaustiveness**: Call `.exhaustive()` if you want compile-time guarantees.
+- **Capture**: `P.select()` to extract sub-values from the match target.
+
+---
+
+### Final Thoughts
+
+These rules should **guide Cursor AI** to generate and interpret TypeScript code aligned with your **team’s standards**—from **advanced type-level features** to **lint/format** preferences. For best results, keep your `.cursorrules` in the project root, alongside your `tsconfig.json`, ESLint, and Prettier configs. Then, **audit** AI-suggested code regularly to ensure it matches these guidelines and truly benefits your workflow.
