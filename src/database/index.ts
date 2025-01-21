@@ -1,13 +1,23 @@
-// src/db/index.ts
+/**
+ * Database Configuration
+ * ====================
+ * Main database configuration and connection setup.
+ */
+
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import * as schema from './schema';
 
-// For serverless environments (using connection pooler)
-const client = postgres(process.env.MARKETING_SUPABASE_DATABASE_URL!, {
-  prepare: false, // Disable prepare for "Transaction" pool mode
-});
+// Create the connection
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error('DATABASE_URL environment variable is required');
+}
 
-// For long-running servers (using direct connection)
-// const client = postgres(process.env.MARKETING_SUPABASE_DATABASE_DIRECT_URL!);
+const client = postgres(connectionString);
 
-export const db = drizzle(client);
+// Create the database instance with schema
+export const db = drizzle(client, { schema });
+
+// Export schema for convenience
+export * from './schema';

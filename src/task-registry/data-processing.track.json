@@ -1,0 +1,153 @@
+{
+  "name": "Data Processing Track",
+  "trackFile": "src/trigger/tracks/data-processing.track.ts",
+  "description": "Processes source data through ingestion, resolution, enrichment, scoring, and task creation",
+  "version": "1.0.0",
+  "input": {
+    "required": {
+      "source": {
+        "type": "object",
+        "description": "Source metadata information",
+        "properties": {
+          "type": {
+            "type": "enum",
+            "values": [
+              "lead_form",
+              "ad_platform",
+              "google_analytics",
+              "mixpanel",
+              "postgres_import",
+              "app_signup",
+              "manual_entry",
+              "enrichment",
+              "api"
+            ],
+            "description": "Type of data source"
+          }
+        }
+      },
+      "data": {
+        "type": "record",
+        "description": "Raw data from the source",
+        "items": "any"
+      }
+    },
+    "optional": {
+      "source.provider": {
+        "type": "string",
+        "description": "Provider or platform name"
+      },
+      "source.batchId": {
+        "type": "string",
+        "description": "Batch identifier for grouped records"
+      },
+      "source.externalId": {
+        "type": "string",
+        "description": "External identifier from the source system"
+      },
+      "trampData": {
+        "type": "record",
+        "description": "Arbitrary data to pass through unchanged",
+        "items": "any"
+      }
+    }
+  },
+  "output": {
+    "success": {
+      "type": "boolean",
+      "description": "Whether the entire track completed successfully"
+    },
+    "data": {
+      "type": "object",
+      "description": "Track result data",
+      "optional": true,
+      "properties": {
+        "sourceRecordId": {
+          "type": "string",
+          "description": "ID of the created source record"
+        },
+        "personId": {
+          "type": "string",
+          "description": "ID of the resolved person",
+          "optional": true
+        },
+        "organizationId": {
+          "type": "string",
+          "description": "ID of the resolved organization",
+          "optional": true
+        },
+        "enriched": {
+          "type": "object",
+          "description": "Enrichment results",
+          "properties": {
+            "personEnriched": {
+              "type": "boolean",
+              "description": "Whether a person was enriched"
+            },
+            "organizationEnriched": {
+              "type": "boolean",
+              "description": "Whether an organization was enriched"
+            }
+          }
+        },
+        "scored": {
+          "type": "object",
+          "description": "Scoring results",
+          "properties": {
+            "personScored": {
+              "type": "boolean",
+              "description": "Whether a person was scored"
+            },
+            "personScore": {
+              "type": "number",
+              "description": "Updated person score"
+            },
+            "organizationScored": {
+              "type": "boolean",
+              "description": "Whether an organization was scored"
+            },
+            "organizationScore": {
+              "type": "number",
+              "description": "Updated organization score"
+            }
+          }
+        },
+        "tasks": {
+          "type": "array",
+          "description": "Created ClickUp tasks",
+          "items": {
+            "type": "object",
+            "properties": {
+              "taskId": {
+                "type": "string",
+                "description": "Internal task ID"
+              },
+              "clickupId": {
+                "type": "string",
+                "description": "ClickUp task ID"
+              }
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "type": "string",
+      "description": "Error message if track failed",
+      "optional": true
+    },
+    "trampData": {
+      "type": "record",
+      "description": "The same arbitrary data that was passed in",
+      "items": "any",
+      "optional": true
+    }
+  },
+  "tasks": [
+    "source-data-ingestion",
+    "data-resolution",
+    "enrichment",
+    "scoring",
+    "create-clickup-task"
+  ]
+} 

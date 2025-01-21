@@ -1,9 +1,16 @@
-// src/trigger/data_resolution.ts
+/**
+ * Data Resolution Task
+ * ==================
+ * Task for resolving and processing data from source records.
+ */
+
 import { task, logger } from '@trigger.dev/sdk/v3';
 import { db } from '../../database';
-import { sourceRecords, contacts, persons, organizations } from '../../database/schema';
+import { sourceRecords } from '../../database/schema';
 import { eq } from 'drizzle-orm';
-import { DataResolutionInput } from '../../schemas/data-resolution/task';
+import { DataResolutionTask, DataResolutionTaskResult, dataResolutionMetadata } from '../../schemas/data-resolution/task';
+import { DatabaseResolver } from '../../lib/data-resolution/db-resolver';
+import { dataResolutionConfig } from '../../schemas/data-resolution/config';
 
 export const dataResolutionTask = task({
   id: 'data-resolution',
@@ -19,9 +26,13 @@ export const dataResolutionTask = task({
     concurrencyLimit: 1,
   },
 
-  run: async (payload: DataResolutionInput) => {
+  run: async (payload: DataResolutionTask, context): Promise<DataResolutionTaskResult> => {
+    const startTime = Date.now();
+    const processingSteps: string[] = [];
+
     try {
       // 1. Load source record
+      processingSteps.push('load_source_record');
       const [sourceRecord] = await db
         .select()
         .from(sourceRecords)
@@ -32,116 +43,77 @@ export const dataResolutionTask = task({
         throw new Error(`Source record ${payload.sourceRecordId} not found`);
       }
 
-      // 2. Process in transaction
-      const result = await db.transaction(async (tx) => {
-        const rawData = sourceRecord.rawData as any;
-        let resolvedContact = null;
-        let resolvedPerson = null;
-        let resolvedOrg = null;
+      // 2. Create resolver with configuration
+      processingSteps.push('initialize_resolver');
+      const config = payload.config ?? dataResolutionConfig.parse({});
+      const resolver = new DatabaseResolver(config);
 
-        // 3. Process Contact if exists
-        if (rawData.contact?.type && rawData.contact?.value) {
-          // Create person first
-          const [tempPerson] = await tx
-            .insert(persons)
-            .values({
-              type: 'lead',
-              status: 'new',
-            })
-            .returning();
-
-          // Upsert contact
-          const [contact] = await tx
-            .insert(contacts)
-            .values({
-              type: rawData.contact.type,
-              value: rawData.contact.value,
-              isPrimary: true,
-              status: 'unverified',
-              personId: tempPerson.id,
-            })
-            .onConflictDoUpdate({
-              target: [contacts.type, contacts.value, contacts.personId],
-              set: {
-                updatedAt: new Date(),
-              },
-            })
-            .returning();
-
-          resolvedContact = contact;
-        }
-
-        // 4. Process Person
-        if (rawData.person || resolvedContact) {
-          const [person] = await tx
-            .insert(persons)
-            .values({
-              ...rawData.person,
-              type: rawData.person?.type ?? 'lead',
-              status: rawData.person?.status ?? 'new',
-            })
-            .onConflictDoUpdate({
-              target: [persons.id],
-              set: rawData.person || {},
-            })
-            .returning();
-
-          resolvedPerson = person;
-        }
-
-        // 5. Process Organization
-        if (rawData.organization) {
-          const [org] = await tx
-            .insert(organizations)
-            .values({
-              name: rawData.organization.name,
-              domain: rawData.organization.domain,
-              website: rawData.organization.website,
-            })
-            .onConflictDoUpdate({
-              target: [organizations.domain],
-              set: {
-                name: rawData.organization.name,
-                website: rawData.organization.website,
-                updatedAt: new Date(),
-              },
-            })
-            .returning();
-
-          resolvedOrg = org;
-        }
-
-        // 6. Update source record
-        await tx
-          .update(sourceRecords)
-          .set({
-            processingStatus: 'processed',
-            processedAt: new Date(),
-            resolvedContactId: resolvedContact?.id,
-            resolvedPersonId: resolvedPerson?.id,
-            resolvedOrgId: resolvedOrg?.id,
-            normalizedData: {
-              contact: resolvedContact,
-              person: resolvedPerson,
-              organization: resolvedOrg,
-            },
-          })
-          .where(eq(sourceRecords.id, sourceRecord.id));
-
-        return {
-          contact: resolvedContact,
-          person: resolvedPerson,
-          organization: resolvedOrg,
-        };
+      // 3. Process data
+      processingSteps.push('resolve_data');
+      const result = await resolver.resolve({
+        type: sourceRecord.sourceType,
+        data: sourceRecord.rawData
       });
 
+      // 4. Update source record with results
+      processingSteps.push('update_record');
+      await db
+        .update(sourceRecords)
+        .set({
+          processingStatus: result.status === 'resolved' ? 'processed' : 'failed',
+          processedAt: new Date(),
+          resolvedContactId: result.match?.recordType === 'person' ? result.match.recordId : null,
+          resolvedPersonId: result.match?.recordType === 'person' ? result.match.recordId : null,
+          resolvedOrgId: result.match?.recordType === 'organization' ? result.match.recordId : null,
+          normalizedData: {
+            status: result.status,
+            match: result.match,
+            error: result.error,
+            metadata: result.metadata
+          },
+          processingErrors: result.error ? {
+            message: result.error.message,
+            timestamp: result.error.timestamp
+          } : null
+        })
+        .where(eq(sourceRecords.id, sourceRecord.id));
+
+      // 5. Return result
+      const success = result.status === 'resolved';
+      const processingTime = Date.now() - startTime;
+
       return {
-        success: true,
+        job: {
+          success,
+          taskName: 'data-resolution',
+          runId: context.ctx.run.id,
+          input: {
+            sourceRecordId: payload.sourceRecordId,
+            config: payload.config
+          }
+        },
+        success,
         data: result,
-        trampData: payload.trampData,
+        metadata: {
+          processingTime,
+          processingSteps,
+          validationResults: {
+            passed: !result.error,
+            errors: result.error ? [result.error.message] : undefined
+          },
+          matchingStats: {
+            totalAttempts: result.metadata?.attempts ?? 0,
+            successfulMatches: success ? 1 : 0,
+            failedMatches: success ? 0 : 1,
+            averageConfidence: result.match?.confidence ?? 0
+          }
+        },
+        trampData: payload.trampData
       };
+
     } catch (error) {
       logger.error('Data resolution failed', { error });
+      const processingTime = Date.now() - startTime;
 
       // Update source record with error
       await db
@@ -155,12 +127,39 @@ export const dataResolutionTask = task({
         })
         .where(eq(sourceRecords.id, payload.sourceRecordId));
 
+      // Return error result
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
       return {
+        job: {
+          success: false,
+          taskName: 'data-resolution',
+          runId: context.ctx.run.id,
+          input: {
+            sourceRecordId: payload.sourceRecordId,
+            config: payload.config
+          },
+          error: errorMessage
+        },
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
         data: null,
-        trampData: payload.trampData,
+        error: errorMessage,
+        metadata: {
+          processingTime,
+          processingSteps,
+          validationResults: {
+            passed: false,
+            errors: [errorMessage]
+          },
+          matchingStats: {
+            totalAttempts: 0,
+            successfulMatches: 0,
+            failedMatches: 1,
+            averageConfidence: 0
+          }
+        },
+        trampData: payload.trampData
       };
     }
-  },
+  }
 });

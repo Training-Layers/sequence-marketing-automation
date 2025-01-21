@@ -24,6 +24,8 @@
     "@supabase/supabase-js": "^2.47.12",
     "@trigger.dev/sdk": "3.3.9",
     "drizzle-orm": "^0.38.3",
+    "ioredis": "^5.4.2",
+    "lru-cache": "^11.0.2",
     "postgres": "^3.4.5",
     "zod": "^3.24.1"
   },
